@@ -1,13 +1,14 @@
 # Company Run Instructions
 
-Use `run.bat` on Windows. Keep this file, `run.bat`, `requirements.txt`, and `2-6-2026_Final_Working.py` in the main project folder.
+Use the two step `.bat` files on Windows. Keep this file, the two `.bat` files, `requirements.txt`, and `2-6-2026_Final_Working.py` in the main project folder.
 
 Expected folder structure:
 
 ```text
 Project Main/
   2-6-2026_Final_Working.py
-  run.bat
+  Step1_Generate_Missing_SKU.bat
+  Step2_Run_Full_Pipeline.bat
   requirements.txt
   System Files/
     Master Sheet Updated.xlsx
@@ -30,10 +31,24 @@ Logs are written to `logs/`.
 
 Backups of existing overwritten Excel files are written to `backups/`.
 
-If missing MSKUs are found, the first run creates:
+Run this first:
+
+```text
+Step1_Generate_Missing_SKU.bat
+```
+
+If missing MSKUs are found, Step 1 creates or checks:
 
 ```text
 User Input/Missing SKU File/Missing SKU.xlsx
 ```
 
-Fill the required columns in that file, then run `run.bat` again. The script will not overwrite a partially filled missing-SKU file.
+Fill the required columns in that file and save it.
+
+Then run:
+
+```text
+Step2_Run_Full_Pipeline.bat
+```
+
+Step 2 updates the master file and generates the output reports. The script will not overwrite a partially filled missing-SKU file.

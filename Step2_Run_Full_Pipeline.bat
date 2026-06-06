@@ -6,7 +6,7 @@ cd /d "%~dp0"
 if not exist logs mkdir logs
 
 echo ================================================== >> logs\console.log
-echo Run started %date% %time% >> logs\console.log
+echo Step 2 started %date% %time% >> logs\console.log
 
 if not exist ".venv\Scripts\python.exe" (
     echo Creating Python virtual environment...
@@ -34,15 +34,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-python "2-6-2026_Final_Working.py" >> logs\console.log 2>&1
+python "2-6-2026_Final_Working.py" --mode full >> logs\console.log 2>&1
 set EXIT_CODE=%errorlevel%
 
 if not "%EXIT_CODE%"=="0" (
-    echo Script failed. Check logs\console.log and the latest logs\run_*.log
+    echo Step 2 failed. Check logs\console.log and the latest logs\run_*.log
 ) else (
-    echo Script completed successfully.
+    echo Step 2 completed successfully.
 )
 
-echo Run finished %date% %time% with exit code %EXIT_CODE% >> logs\console.log
+echo Step 2 finished %date% %time% with exit code %EXIT_CODE% >> logs\console.log
 pause
 exit /b %EXIT_CODE%

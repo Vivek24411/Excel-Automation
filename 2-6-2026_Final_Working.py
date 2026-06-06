@@ -1,3 +1,4 @@
+import argparse
 import importlib
 import logging
 import shutil
@@ -52,6 +53,26 @@ def log_uncaught_exception(exc_type, exc_value, exc_traceback):
 sys.excepthook = log_uncaught_exception
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Excel automation pipeline for missing SKU and report generation."
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["generate-missing", "full"],
+        default="full",
+        help=(
+            "generate-missing creates/checks Missing SKU.xlsx and stops; "
+            "full runs the complete pipeline after missing SKUs are filled."
+        ),
+    )
+    return parser.parse_args()
+
+
+ARGS = parse_args()
+RUN_MODE = ARGS.mode
+
+
 def require_dependencies():
     missing = []
     for package in ["pandas", "openpyxl", "xlsxwriter"]:
@@ -77,6 +98,8 @@ warnings.filterwarnings("ignore")
 print("Libraries ready")
 print("Log file:", LOG_FILE)
 logging.info("Process started from %s", BASE_DIR)
+logging.info("Run mode: %s", RUN_MODE)
+print("Run mode:", RUN_MODE)
 
 
 def rel_path(*parts):
@@ -201,14 +224,35 @@ missing_file_is_ready = bool(missing_mskus) and missing_file_ready(
 
 if not missing_mskus:
     print("No missing MSKUs - nothing to write.")
+    if RUN_MODE == "generate-missing":
+        print("Step 1 complete. No Missing SKU file is needed.")
+        print("You can run Step2_Run_Full_Pipeline.bat.")
+        logging.info("Step 1 complete with no missing MSKUs.")
+        sys.exit(0)
 elif missing_file_is_ready:
     print("Filled missing SKU file found. Continuing with master update.")
+    if RUN_MODE == "generate-missing":
+        print("Step 1 complete. Missing SKU file is already filled.")
+        print("You can run Step2_Run_Full_Pipeline.bat.")
+        logging.info("Step 1 complete with filled missing SKU file.")
+        sys.exit(0)
 elif Path(MISSING_FILE).exists():
     print("Existing missing SKU file is not complete, so it was not overwritten.")
-    print("Please fill the required columns in this file and run again:", MISSING_FILE)
+    print("Please fill the required columns in this file:", MISSING_FILE)
+    if RUN_MODE == "generate-missing":
+        print("After filling it, run Step2_Run_Full_Pipeline.bat.")
+        logging.info("Step 1 stopped with incomplete missing SKU file: %s", MISSING_FILE)
+        sys.exit(0)
+    print("Run Step1_Generate_Missing_SKU.bat if you need to create/check the file.")
     logging.info("Stopped because missing SKU file is incomplete: %s", MISSING_FILE)
     sys.exit(1)
 else:
+    if RUN_MODE == "full":
+        print("Missing SKUs were found, but Missing SKU.xlsx does not exist yet.")
+        print("Run Step1_Generate_Missing_SKU.bat first, fill the file, then run this step again.")
+        logging.info("Full pipeline stopped because missing SKU file does not exist: %s", MISSING_FILE)
+        sys.exit(1)
+
     # Collect dropdown options from system file
     dropdown_options = {}
     for col in DROPDOWN_COLS:
@@ -280,7 +324,7 @@ else:
     print("Rows written : " + str(n))
     print("Others cols  : " + str(others_cols))
     print("Product col pre-filled -> HLP for all rows.")
-    print("Please fill the missing SKU file and run this script again.")
+    print("Please fill the missing SKU file, save it, and run Step2_Run_Full_Pipeline.bat.")
     logging.info("Stopped after creating missing SKU template: %s", MISSING_FILE)
     sys.exit(0)
 
